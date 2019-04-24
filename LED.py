@@ -2,6 +2,7 @@ import unicornhat as unicorn
 import time
 import math
 import colorsys
+import numpy
 
 class LED:
     def __init__(self, position,  brightness=0.5, colours=(255, 255, 255), rotation=0):
@@ -13,6 +14,7 @@ class LED:
         self.x_position = None
         self.y_position = None
         self.rotation = None
+        self.stats = None
 
         # set unicorn vars
         unicorn.set_layout(unicorn.PHAT)
@@ -23,29 +25,36 @@ class LED:
         self.set_brightness(brightness)
         self.set_position(position)
         self.set_rotation(rotation)
-
-        self.stats = ("position:{0},{1}, colour:{2},{3},{4}, brightness {5}".format(
-            self.x_position, self.y_position, self.red, self.green, self.blue, self.brightness
-        ))
+        self.set_stats()
         print("Created LED with {0}".format(self.stats))
 
     def on(self):
-        unicorn.set_pixel(self.x_position, self.y_position, self.red, self.green, self.blue)
         print("Showing LED {0}".format(self.stats))
+        unicorn.set_pixel(self.x_position, self.y_position, self.red, self.green, self.blue)
+        unicorn.show()
 
     def off(self):
-        unicorn.set_pixel(self.x_position, self.y_position, 0, 0, 0)
         print("Hiding LED {0}".format(self.stats))
+        unicorn.set_pixel(self.x_position, self.y_position, 0, 0, 0)
+        unicorn.show()
 
     def set_colours(self, colours):
-        if all(0 <= col <= 255 for col in colours):
+        if all(type(c) == float or type(c) == numpy.float64 for c in colours):
+            # floating point values come from hsv to rgb's
+
+            colours[0] = int(colours[0] * 255.0)
+            colours[1] = int(colours[1] * 255.0)
+            colours[2] = int(colours[2] * 255.0)
+        if any(0 <= col <= 255 for col in colours):
             self.red = colours[0]
             self.green = colours[1]
             self.blue = colours[2]
         else:
+            print("setting colour to white due to input colours being {0}".format(colours))
             self.red = 255
             self.green = 255
             self.blue = 255
+        self.set_stats()
 
     def set_colour(self, colour, intensity):
         if colour == "red":
@@ -65,18 +74,16 @@ class LED:
                 self.blue = intensity
             else:
                 self.blue = 0
+        self.set_stats()
 
     def set_brightness(self, brightness):
-
         if 0 <= brightness <= 0.5:
-
             self.brightness = brightness
             unicorn.brightness = brightness
-            print("LED IS SETTING BRIGHGNRESS TO {0}".format(self.brightness))
         else:
             self.brightness = 0.01
             unicorn.brightness = 0.01
-            print("LED IS SETTING BRIGHGNRESS TO {0}".format(self.brightness))
+        self.set_stats()
 
     def set_position(self, position):
         if 0 <= position[0] <= self.max_x:
@@ -87,6 +94,7 @@ class LED:
             self.y_position = position[1]
         else:
             self.y_position = 0
+        self.set_stats()
 
     def set_rotation(self, rotation):
         # do some more things by here to allow you to flip things around
@@ -102,3 +110,15 @@ class LED:
     def get_brightness(self):
         return self.brightness
 
+    def get_stats(self):
+        return self.stats
+
+    def set_stats(self):
+        self.stats = ("position:{0},{1}, colour:{2},{3},{4}, brightness {5}".format(
+            self.x_position, self.y_position, self.red, self.green, self.blue, self.brightness
+        ))
+
+    def blink(self):
+        self.on()
+        time.sleep(0.05)
+        self.off()

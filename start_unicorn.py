@@ -3,7 +3,7 @@ import time
 import sys
 import subprocess
 import imp
-import unicornhat as uni
+import unicornhat
 
 def run(job):
     started = False
@@ -20,7 +20,7 @@ def run(job):
             while time.time() < t_end:
                 pass
             process.terminate()
-            uni.off()
+            unicornhat.off()
             return
 
 
@@ -47,4 +47,4 @@ if __name__ == "__main__":
     try:
         unicorn_up()
     finally:
-        uni.clear()
+        unicornhat.off()
